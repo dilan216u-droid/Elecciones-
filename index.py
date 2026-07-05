@@ -5,8 +5,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-# SOLUCIÓN CORS 1: Forzamos de manera global que acepte cualquier origen (incluyendo 'null')
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Permitimos tu nuevo dominio de Vercel explícitamente
+CORS(app, origins=["https://voto-celania-0-f.vercel.app"], supports_credentials=True)
 
 TURSO_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
