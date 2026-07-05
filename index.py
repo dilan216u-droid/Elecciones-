@@ -5,8 +5,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-# Permitimos tu nuevo dominio de Vercel explícitamente
-CORS(app, origins=["https://voto-celania-0-f.vercel.app"], supports_credentials=True)
+# Configuración global abierta para producción sin restricciones de dominio
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 TURSO_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
@@ -20,17 +20,15 @@ else:
 def inicio():
     return jsonify({"status": "online", "message": "Servidor de votación de Celania activo"}), 200
 
-# SOLUCIÓN CORS 2: Añadimos 'OPTIONS' a los métodos para responder correctamente al preflight del navegador
 @app.route('/registrar-voto', methods=['POST', 'OPTIONS'], strict_slashes=False)
 def registrar_voto():
-    # Si el navegador pregunta primero por los permisos de la ruta (Preflight)
     if request.method == 'OPTIONS':
         return jsonify({"status": "success"}), 200
 
-    # Validar que las variables de entorno existan
     if not TURSO_HTTP_URL or not TURSO_TOKEN:
         return jsonify({"status": "error", "message": "Faltan las credenciales de la base de datos en Railway"}), 500
 
+    # Volvemos a la recepción estándar por JSON
     data = request.get_json()
     if not data or 'hash' not in data:
         return jsonify({"status": "error", "message": "Falta el hash del voto"}), 400
@@ -62,12 +60,11 @@ def registrar_voto():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error interno: {str(e)}"}), 500
 
-# MANEJO DE ERRORES EN JSON
 @app.errorhandler(405)
 def metodo_no_permitido(e):
-    return jsonify({"status": "error", "message": "Método no permitido. Asegúrate de enviar un POST"}), 405
+    return jsonify({"status": "error", "message": "Método no permitido"}), 405
 
 @app.errorhandler(404)
 def ruta_no_encontrada(e):
-    return jsonify({"status": "error", "message": "Ruta no encontrada. Revisa la URL"}), 404
+    return jsonify({"status": "error", "message": "Ruta no encontrada"}), 404
     
